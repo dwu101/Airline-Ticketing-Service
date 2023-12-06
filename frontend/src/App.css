@@ -1,0 +1,32 @@
+
+.inputBox {
+  display: flex;
+  justify-content: center;
+  align-items: column;
+  /* margin-right: 20px; */
+  margin-bottom: 20px;
+  margin-left: 30px;
+}
+
+.SearchBox {
+  display: flex;
+  justify-content: flex-start;
+  align-items: flex-start;
+  flex-direction:column;
+  /* height: 100vh; */
+  width: 100%;
+  column-gap: 15px;
+  margin-left: 50px;
+}
+
+.Navbar{
+  display: flex;
+  flex-direction: row;
+  margin-left: 50px;
+  justify-content: flex-start;
+}
+
+.Navbar div{
+  margin-right: 50px;
+}
+
