@@ -4,6 +4,7 @@ sys.path.insert(0,"/python310\lib\site-packages")
 import pymysql 
 from datetime import datetime, timedelta
 import random
+import hashlib
 
 app = Flask(__name__)
 app.secret_key = 'root'
@@ -110,11 +111,13 @@ def logout():
     session.clear()
     return 'logged out',200
 
-@app.route('/CustomerLoginAuth', methods = ["POST"])
+@app.route('/LoginAuth', methods = ["POST"])
 def loginAuth():
     data = request.get_json()
     username = data['Username']
     password = data['Password']
+    password = hashlib.md5(password.encode('utf-8')).hexdigest()
+
     loginType = data['LoginType']
 
     if loginType == "Customer":
@@ -281,6 +284,7 @@ WHERE Email_address = %s;
         firstName = data["firstName"]
         lastName = data["lastName"]
         password= data["password"]
+        password = hashlib.md5(password.encode('utf-8')).hexdigest()
         DOB = data["DOB"]
         buildingNumber= data["buildingNumber"]
         streetName = data["streetName"]
@@ -322,6 +326,8 @@ WHERE Username = %s;
         firstName = data["firstName"]
         lastName = data["lastName"]
         password= data["password"]
+        password = hashlib.md5(password.encode('utf-8')).hexdigest()
+
         DOB = data["DOB"]
         airlineName = data["airlineName"]
         phoneNum = data["phoneNum"]
@@ -575,7 +581,7 @@ def getSpending():
     end = data['end']
 
     if start == "" and end == "" : #default, do a year before 
-        yearAgo = (datetime.now() - timedelta(days=365)).strftime('%Y-%m-%d') + " 12:00:00" 
+        yearAgo = (datetime.now() - timedelta(days=365)).strftime('%Y-%m-%d') + " 00:00:00" 
         query = '''
 SELECT SUM(Ticket_Price) as Spending
 FROM ticket 
@@ -584,14 +590,14 @@ WHERE Email_address = %s AND Purchase_Date_Time > %s;
         response = executeQuery(query, (session['username'], yearAgo))
         ret = {"Spending": response[0]['Spending']}
         last6Months = [
-            datetime.now().strftime('%Y-%m-%d') + " 12:00:00" ,
-            (datetime.now() - timedelta(days=30)).strftime('%Y-%m-%d') + " 12:00:00" ,
-            (datetime.now() - timedelta(days=60)).strftime('%Y-%m-%d') + " 12:00:00" ,
-            (datetime.now() - timedelta(days=90)).strftime('%Y-%m-%d') + " 12:00:00" ,
-            (datetime.now() - timedelta(days=120)).strftime('%Y-%m-%d') + " 12:00:00" ,
-            (datetime.now() - timedelta(days=150)).strftime('%Y-%m-%d') + " 12:00:00" ,
-            (datetime.now() - timedelta(days=180)).strftime('%Y-%m-%d') + " 12:00:00" ,
-            (datetime.now() - timedelta(days=210)).strftime('%Y-%m-%d') + " 12:00:00"
+            datetime.now().strftime('%Y-%m-%d') + " 00:00:00" ,
+            (datetime.now() - timedelta(days=30)).strftime('%Y-%m-%d') + " 00:00:00" ,
+            (datetime.now() - timedelta(days=60)).strftime('%Y-%m-%d') + " 00:00:00" ,
+            (datetime.now() - timedelta(days=90)).strftime('%Y-%m-%d') + " 00:00:00" ,
+            (datetime.now() - timedelta(days=120)).strftime('%Y-%m-%d') + " 00:00:00" ,
+            (datetime.now() - timedelta(days=150)).strftime('%Y-%m-%d') + " 00:00:00" ,
+            (datetime.now() - timedelta(days=180)).strftime('%Y-%m-%d') + " 00:00:00" ,
+            (datetime.now() - timedelta(days=210)).strftime('%Y-%m-%d') + " 00:00:00"
         ]
         for i in range(1,len(last6Months)):
             start = last6Months[i]
@@ -630,10 +636,10 @@ WHERE Email_address = %s AND Purchase_Date_Time >= %s AND Purchase_Date_time <= 
         while True:
             if datetime.strptime(curr,'%Y-%m-%d') < datetime.strptime(start,'%Y-%m-%d'):
                 #just add the end to the list
-                monthsToDisplay.append(start + " 12:00:00")
+                monthsToDisplay.append(start + " 00:00:00")
                 break 
             else:
-                monthsToDisplay.append(curr + " 12:00:00")
+                monthsToDisplay.append(curr + " 00:00:00")
                 curr = (datetime.strptime(curr,'%Y-%m-%d') - timedelta(days=30)).strftime('%Y-%m-%d')
 
         print(monthsToDisplay)
@@ -993,8 +999,8 @@ def getRev():
         if not isStaff():
             return 'Not Authorized', 600 
         currTime = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        yearAgo = (datetime.now() - timedelta(days=365)).strftime('%Y-%m-%d') + " 12:00:00"
-        monthAgo = (datetime.now() - timedelta(days=30)).strftime('%Y-%m-%d') + " 12:00:00"
+        yearAgo = (datetime.now() - timedelta(days=365)).strftime('%Y-%m-%d') + " 00:00:00"
+        monthAgo = (datetime.now() - timedelta(days=30)).strftime('%Y-%m-%d') + " 00:00:00"
         ret = {}
 
         query = '''
@@ -1045,7 +1051,7 @@ HAVING
                             GROUP BY
                             Email_Address) as temp2);
 '''
-        data = executeQuery(query, (session['airlineName'], (datetime.now() - timedelta(days=365)).strftime('%Y-%m-%d') + " 12:00:00"))
+        data = executeQuery(query, (session['airlineName'], (datetime.now() - timedelta(days=365)).strftime('%Y-%m-%d') + " 00:00:00"))
         return jsonify(data)
     except Exception as e:
         print(e)
@@ -1070,7 +1076,56 @@ def customerSearch():
     except Exception as e:
         print(e)
         return 'error', 400
-        
+    
+
+@app.route('/monthTicketSales', methods = ["POST"])
+def monthTicketSales():
+    if not isStaff():
+        return 'Not Authorized', 600 
+    try:
+        data = request.get_json()
+        monthYear = data['month']
+
+        year = monthYear[0:4]
+        month = monthYear[5:]
+        startDate = year + "-" + month + "-01 00:00:00"
+        endDate = year + "-" + month + "-31 23:59:59"
+        airlineName = session['airlineName']
+        query = '''
+    SELECT COUNT(*) as numTickets
+    FROM ticket, flight
+    WHERE ticket.Flight_Number = flight.Flight_Number AND ticket.Departure_Date_Time = flight.Departure_Date_Time
+    AND flight.Airline_Name = %s AND ticket.Purchase_Date_Time >= %s AND ticket.Purchase_Date_Time <= %s
+'''
+        data = executeQuery(query, (airlineName, startDate, endDate))[0]
+        print(data)
+        return jsonify(data)
+    except Exception as e:
+        print(e)
+        return 'error', 400 
+
+@app.route('/statusTotal', methods = ["POST"])
+def statusTotal():
+    if not isStaff():
+        return 'Not Authorized', 600 
+    try:
+        data = request.get_json()
+        status = data['status']
+
+        airlineName = session['airlineName']
+        query = '''
+    SELECT COUNT(*) as numTickets
+    FROM ticket, flight
+    WHERE ticket.Flight_Number = flight.Flight_Number AND ticket.Departure_Date_Time = flight.Departure_Date_Time
+    AND flight.Airline_Name = %s AND flight.Flight_Status = %s
+'''
+        data = executeQuery(query, (airlineName, status))[0]
+        ret = {'statusTotal': data['numTickets']}
+        return jsonify(ret)
+    except Exception as e:
+        print(e)
+        return 'error', 400
+    
     
 
 if __name__ =="__main__":

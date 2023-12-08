@@ -2,22 +2,13 @@
 import { BrowserRouter as Router} from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import Navbar from './Components/Navbar';
-// import LoginForm from './Components/LoginForm';
 import RoutesConfig from './Routes'; 
 import './App.css';
-// import FlightSearch from './Components/FlightSearch';
 
 
 const App = () =>{
 
-  useEffect(() => {
-    window.addEventListener('beforeunload', handleLogout);
-
-    // Cleanup function
-    return () => {
-        window.removeEventListener('beforeunload', handleLogout);
-    };
-}, []);
+  
 
 
   const [isLoggedIn, setLoggedIn] = useState(false);

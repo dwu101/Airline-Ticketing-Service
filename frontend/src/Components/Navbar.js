@@ -26,7 +26,7 @@ const Navbar = ({ isLoggedIn, onLogout, userType }) => {
                   </div>
                 ):(
                   <div>
-                    <Link to ="/StaffHomePage">
+                    <Link to ="/AirlineStaffHomePage">
                         <button > Home </button>
                     </Link>
 

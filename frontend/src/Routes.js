@@ -1,11 +1,11 @@
 import React from 'react';
 import { Route, Routes } from 'react-router-dom';
-import LoginForm from './Components/LoginForm';
-import FlightSearch from './Components/FlightSearch';
-import StatusSearch from './Components/StatusSearch';
-import RegisterForm from './Components/RegisterForm';
-import CustomerHomePage from './Components/CustomerHomePage';
-import AirlineStaffHomePage from './Components/AirlineStaffHomePage';
+import LoginForm from './Pages/LoginForm';
+import FlightSearch from './Pages/FlightSearch';
+import StatusSearch from './Pages/StatusSearch';
+import RegisterForm from './Pages/RegisterForm';
+import CustomerHomePage from './Pages/CustomerHomePage';
+import AirlineStaffHomePage from './Pages/AirlineStaffHomePage';
 
 
 
